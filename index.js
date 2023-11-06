@@ -27,12 +27,19 @@ async function run() {
         // await client.connect();
 
         // create mongoDB database for Products
-        const categoryCollections = client.db("dreamJobsDB").collection("category");
+        const categoryCollections = client.db("dreamJobsDB").collection("categories");
 
         // create mongoDB database for jobs
         const jobsCollections = client.db("dreamJobsDB").collection("jobs");
 
         //--------------Start------------------- get API ------------------------------
+
+        // get categories
+        app.get('/categories', async (req, res) => {
+            const result = await categoryCollections.find().toArray();
+            res.send(result);
+        })
+
 
 
         // Send a ping to confirm a successful connection
