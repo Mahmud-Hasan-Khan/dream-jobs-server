@@ -46,6 +46,15 @@ async function run() {
             res.send(result)
         })
 
+        // get jobs filtering by category
+        app.get('/jobs', async (req, res) => {
+            const jobCategory = req.query.jobCategory; // Get the jobCategory from the query parameter
+            const query = jobCategory ? { jobCategory } : {}; // Create a query to filter by jobCategory if it exists
+
+            const result = await jobsCollections.find(query).toArray();
+            res.send(result);
+        });
+
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
