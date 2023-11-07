@@ -32,6 +32,9 @@ async function run() {
         // create mongoDB database for jobs
         const jobsCollections = client.db("dreamJobsDB").collection("jobs");
 
+        // create mongoDB database for Applied Jobs
+        const appliedJobsCollections = client.db("dreamJobsDB").collection("appliedJobs");
+
         //--------------Start------------------- get API ------------------------------
 
         // get categories
@@ -62,6 +65,48 @@ async function run() {
             const result = await jobsCollections.findOne(query);
             res.send(result);
         });
+
+        //  Applied jobs
+        app.get('/appliedJobs', async (req, res) => {
+            const result = await appliedJobsCollections.find().toArray();
+            res.send(result)
+        })
+        //--------------End------------------- GET API ------------------------------
+
+
+
+        //--------------Start------------------- POST API ------------------------------
+        // cerate API for products
+        app.post('/products', async (req, res) => {
+            const product = req.body;
+            // console.log('product will be added', product);
+            // Insert the defined document into the "productsCollections"
+            const result = await productsCollections.insertOne(product);
+            res.send(result);
+        });
+
+        app.post('/appliedJobs', async (req, res) => {
+            const cart = req.body;
+            const result = await appliedJobsCollections.insertOne(cart);
+            res.send(result);
+        });
+        //--------------End------------------- POST API ------------------------------
+
+
+        //--------------Start------------------- PATCH API ------------------------------
+        app.patch('/jobs/:id/incrementApplicants', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await jobsCollections.updateOne(query, { $inc: { jobApplicants: 1 } });
+
+            if (result.matchedCount === 1 && result.modifiedCount === 1) {
+                res.status(200).send('Job applicants incremented successfully');
+            } else {
+                res.status(404).send('Job not found or applicants count not updated');
+            }
+        })
+
+        //--------------End------------------- PATCH API ------------------------------
 
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
