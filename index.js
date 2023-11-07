@@ -77,11 +77,9 @@ async function run() {
 
         //--------------Start------------------- POST API ------------------------------
         // cerate API for products
-        app.post('/products', async (req, res) => {
+        app.post('/jobs', async (req, res) => {
             const product = req.body;
-            // console.log('product will be added', product);
-            // Insert the defined document into the "productsCollections"
-            const result = await productsCollections.insertOne(product);
+            const result = await jobsCollections.insertOne(product);
             res.send(result);
         });
 
