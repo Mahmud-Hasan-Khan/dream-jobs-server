@@ -43,12 +43,6 @@ async function run() {
             res.send(result);
         })
 
-        //  get all jobs
-        app.get('/allJobs', async (req, res) => {
-            const result = await jobsCollections.find().toArray();
-            res.send(result)
-        })
-
         // get jobs filtering by category
         app.get('/jobs', async (req, res) => {
             const jobCategory = req.query.jobCategory; // Get the jobCategory from the query parameter
@@ -57,6 +51,17 @@ async function run() {
             const result = await jobsCollections.find(query).toArray();
             res.send(result);
         });
+
+        // get jobs filtering by user email
+        app.get('/jobs', async (req, res) => {
+            const userEmail = req.query.userEmail; // Get the userEmail from the query parameter
+            const query = userEmail ? { userEmail } : {}; // Create a query to filter by userEmail if it exists
+
+            const result = await jobsCollections.find(query).toArray();
+            res.send(result);
+        });
+
+
 
         // get each job by id
         app.get('/jobs/:id', async (req, res) => {
@@ -68,7 +73,9 @@ async function run() {
 
         //  Applied jobs
         app.get('/appliedJobs', async (req, res) => {
-            const result = await appliedJobsCollections.find().toArray();
+            const { email } = req.query;
+            const query = { email };
+            const result = await appliedJobsCollections.find(query).toArray();
             res.send(result)
         })
         //--------------End------------------- GET API ------------------------------
