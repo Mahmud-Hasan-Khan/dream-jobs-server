@@ -1,39 +1,22 @@
 const express = require('express');
+require('dotenv').config();
 const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const app = express();
-require('dotenv').config();
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
 
 // middleware 
 app.use(cors({
     origin: [
-        'http://localhost:5173' // client side 
+        'http://localhost:5173', 'https://dream-jobs-mahmud.web.app', 'https://dream-jobs-mahmud.firebaseapp.com'
     ],
     credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
 
-
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bjwj9uc.mongodb.net/?retryWrites=true&w=majority`;
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
-});
-
-// own middleware
-const logger = (req, res, next) => {
-    console.log('log: info', req.method, req.url);
-    next();
-}
 
 // verifyToken
 const verifyToken = (req, res, next) => {
@@ -50,6 +33,25 @@ const verifyToken = (req, res, next) => {
         next();
     })
 }
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bjwj9uc.mongodb.net/?retryWrites=true&w=majority`;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
+});
+
+// own middleware
+const logger = (req, res, next) => {
+    // console.log('log: info', req.method, req.url);
+    next();
+}
+
+
 
 async function run() {
     try {
@@ -71,25 +73,34 @@ async function run() {
 
 
         // auth related api
-        app.post('/jwt', logger, async (req, res) => {
+        app.post('/jwt', async (req, res) => {
             const user = req.body;
-            console.log('user for token', user);
+            // console.log('user for token', user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
 
             //set cookies
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none'
-            })
-                .send({ success: true });
+            res
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                })
+                .send({
+                    status: true,
+                })
         })
 
         // clear cookie after logout
-        app.post('/logout', logger, async (req, res) => {
+        app.post('/logout', async (req, res) => {
             const user = req.body;
-            console.log('logging out', user);
-            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+            // console.log('logging out', user);
+            res
+                .clearCookie('token', {
+                    maxAge: 0,
+                    secure: process.env.NODE_ENV === 'production' ? true : false,
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                })
+                .send({ status: true })
         })
 
         //--------------Start------------------- get API ------------------------------
@@ -115,7 +126,7 @@ async function run() {
         });
 
         // get jobs filtering by user email
-        app.get('/perUserJobs', logger, verifyToken, async (req, res) => {
+        app.get('/perUserJobs', verifyToken, async (req, res) => {
             const userEmail = req.query.email; // Get the userEmail from the query parameter
             // const query = { userEmail: userEmail }; // Create a query to filter by userEmail if it exists
 
@@ -184,12 +195,12 @@ async function run() {
         });
 
         //  Applied jobs
-        app.get('/appliedJobs', logger, verifyToken, async (req, res) => {
+        app.get('/appliedJobs', verifyToken, async (req, res) => {
             // const { email } = req.query;
             // const query = { email };
 
             // verify user for secure api
-            console.log('token owner info', req.user);
+            // console.log('token owner info', req.user);
             if (req.user.email !== req.query.email) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
