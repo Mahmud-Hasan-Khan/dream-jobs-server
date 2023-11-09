@@ -35,12 +35,20 @@ async function run() {
         // create mongoDB database for Applied Jobs
         const appliedJobsCollections = client.db("dreamJobsDB").collection("appliedJobs");
 
+        // create mongoDB database for featuredEmployee
+        const featuredEmployeeCollections = client.db("dreamJobsDB").collection("featuredEmployee");
+
         //--------------Start------------------- get API ------------------------------
 
         // get categories
         app.get('/categories', async (req, res) => {
             const result = await categoryCollections.find().toArray();
             res.send(result);
+        })
+
+        app.get('/allJobs', async (req, res) => {
+            const result = await jobsCollections.find().toArray();
+            res.send(result)
         })
 
         // get jobs filtering by category
@@ -53,14 +61,54 @@ async function run() {
         });
 
         // get jobs filtering by user email
-        app.get('/jobs', async (req, res) => {
-            const userEmail = req.query.userEmail; // Get the userEmail from the query parameter
-            const query = userEmail ? { userEmail } : {}; // Create a query to filter by userEmail if it exists
-
+        app.get('/perUerJobs', async (req, res) => {
+            const userEmail = req.query.email; // Get the userEmail from the query parameter
+            const query = { userEmail: userEmail }; // Create a query to filter by userEmail if it exists
+            // console.log(query);
             const result = await jobsCollections.find(query).toArray();
             res.send(result);
         });
 
+        // get Featured Employee
+        app.get('/featuredEmployee', async (req, res) => {
+            const result = await featuredEmployeeCollections.find().toArray();
+            res.send(result);
+        })
+
+        //--------------End------------------- get API ------------------------------
+
+
+
+        // delete cart api
+        app.delete('/jobsDelete/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await jobsCollections.deleteOne(query);
+            res.send(result);
+        });
+
+        // update api data for product
+        app.put('/jobUpdate/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateJob = req.body;
+            const newUpdatedJob = {
+                $set: {
+                    bannerURL: updateJob.bannerURL,
+                    companyLogoURL: updateJob.companyLogoURL,
+                    jobTitle: updateJob.jobTitle,
+                    salaryRange: updateJob.salaryRange,
+                    userName: updateJob.userName,
+                    jobDescription: updateJob.jobDescription,
+                    userName: updateJob.userName,
+                    jobApplicants: updateJob.jobApplicants,
+                    jobCategory: updateJob.jobCategory
+                }
+            }
+            const result = await jobsCollections.updateOne(filter, newUpdatedJob, options);
+            res.send(result);
+        });
 
 
         // get each job by id
