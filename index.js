@@ -131,7 +131,7 @@ async function run() {
             // const query = { userEmail: userEmail }; // Create a query to filter by userEmail if it exists
 
             // console.log('token owner info', req.user);
-            if (req.user.email !== req.query.email) {
+            if (!(req.user.email)) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
             let query = {};
@@ -151,7 +151,6 @@ async function run() {
         })
 
         //--------------End------------------- get API ------------------------------
-
 
 
         // delete cart api
@@ -201,7 +200,7 @@ async function run() {
 
             // verify user for secure api
             // console.log('token owner info', req.user);
-            if (req.user.email !== req.query.email) {
+            if (!(req.user.email)) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
             let query = {};
